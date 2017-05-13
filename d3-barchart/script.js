@@ -19,6 +19,17 @@ d3.select('.chart')
 
 */
 
+//*********** ASYNC STRUCTURE OF d3 FILE DOWNLOAD ***********
+/*
+// 1. Code here runs first, before the download starts.
+
+d3.tsv("data.tsv", function(error, data) {
+  // 3. Code here runs last, after the download finishes.
+});
+
+// 2. Code here runs second, while the file is downloading.
+*/
+
 //*********** SVG BAR CHART *********
 var width = 420,
     barHeight = 20;
@@ -64,18 +75,4 @@ function type(d) {
     d.value = +d.value; // coerce to number
     return d;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
