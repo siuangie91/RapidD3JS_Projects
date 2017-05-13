@@ -80,8 +80,31 @@ d3.tsv("data.tsv", type, function(error,data) {
 
 //*********** SVG VERTICAL BAR CHART *********
 
-var width = 960,
-    height = 500;
+// By convention, margins in D3 are specified as an object with top, right, bottom and left properties.
+// Then, the outer size of the chart area, which includes the margins, is used to compute the inner size available for graphical marks by subtracting the margins.
+// (Need the _entire_ chart area to be 960x500, but area for the bars is smaller because of margins. These corrected dimensions are needed for accurately mapping the data across the axes.)
+var margin = {top: 20, right: 30, bottom: 30, left: 40},
+    width = 960 - margin.left - margin.right, // = 890
+    height = 500 - margin.top - margin.bottom; // = 450
+
+// ORDINAL SCALING
+// Example 1
+// var x = d3.scale.ordinal()
+//     .domain(["A", "B", "C", "D", "E", "F"]) // ordinal scale = mapping from a discrete set of data values (names) to a corresponding discrete set of display values (pixel positions)
+//     .range([0, 1, 2, 3, 4, 5]); // mapping "A" to 0, "B" to 1, ... (domain[i] --> range[i])
+
+// Example 2 -- Using rangeBands() to map values evenly across chart area
+//var x = d3.scale.ordinal()
+//    .domain(["A", "B", "C", "D", "E", "F"]) // rangeBands() computes range values so as to divide the chart area into evenly-spaced, evenly-sized bands, as in a bar chart.
+//    .rangeBands([0, width], .1); // If width = 960, x("A") = 0 and x("B") = 160, and so on. Optionally add .1 px of padding
+
+// Example 3 -- Using rangeRoundBands() to map values evenly, but also compute positions that snap to exact pixel boundaries
+//var x = d3.scale.ordinal()
+//    .domain(["A", "B", "C", "D", "E", "F"])
+//    .rangeRoundBands([0, width], .1);
+
+var x = d3.scale.ordinal()
+    .rangeRoundBands([0, width], .1);
 
 // ELEMS ARE POSITIONED FROM TOP DOWN! (THINK OF <rect> AS <div>)
 // GIST IS TO PUSH THE <div>s DOWN ACCORDING TO d.value,
@@ -91,10 +114,15 @@ var y = d3.scale.linear()
     .range([height, 0]); //range is changed from [0, width]; SVG origin = top left. Zero-value should be positioned at the bottom of the chart, not top.
 
 var chart = d3.select("svg.chart")
-    .attr("width", width)
-    .attr("height", height);
+        .attr("width", width + margin.left + margin.right) // set the width and height of the SVG element to the outer dimensions
+        .attr("height", height + margin.top + margin.bottom)
+    .append("g") // add a <g> to offset the origin of the chart area by the top-left margin. This <g> will contain the data <g>s.
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
 
 d3.tsv("letter-frequency.tsv", type, function(error, data) {
+    x.domain(data.map(function(d) { return d.name; })); // map d.name along the x-axis to space them evenly
     y.domain([0, d3.max(data, function(d) { return d.value; })]);
 
     var barWidth = width / data.length;
@@ -102,7 +130,7 @@ d3.tsv("letter-frequency.tsv", type, function(error, data) {
     var bar = chart.selectAll("g")
             .data(data)
         .enter().append("g")
-            .attr("transform", function(d,i) { return "translate(" + i * barWidth + ",0)" ;});
+            .attr("transform", function(d,i) { return "translate(" + x(d.name) + ",0)" ;});
 
     // <svg> origin is top left --> "y" is essentially = "top". y(d.value) scales the "top" position of the <rect> elem.
     // If d.value = max value in dataset --> <rect> height = chart (<svg>) height --> "top" position = 0.
@@ -121,6 +149,17 @@ d3.tsv("letter-frequency.tsv", type, function(error, data) {
         .attr("dy", ".75em")
         .text(function(d) { return d.value; });
 });
+
+
+
+
+
+
+
+
+
+
+
 
 
 
