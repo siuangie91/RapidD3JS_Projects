@@ -23,8 +23,8 @@ d3.select('.chart')
 var width = 420,
     barHeight = 20;
 
-var x = d3.scaleLinear() //.domain([0, d3.max[data]]) // data now pulled from tsv
-    .range([0, /*d3.max[data] * 10*/ width])
+var x = d3.scale.linear() //.domain([0, d3.max[data]]) // data now pulled from tsv; undefined until pulled
+    .range([0, /*d3.max[data] * 10*/ width]);
 
 var chart = d3.select("svg.chart")
     .attr("width", width);
@@ -32,32 +32,36 @@ var chart = d3.select("svg.chart")
     // .attr("height", barHeight * data.length); // set <svg> height based on size of dataset; size is based on the height of each bar rather than the overall height of the chart
 
 d3.tsv("data.tsv", type, function(error,data) {
-    x.domain([0, d3.max(data, function(d) { return d.Value; })]);
+    //x domain defined when pulled from tsv
+    x.domain([0, d3.max(data, function(d) { return d.value; })]);
 
+    // height of chart depends on num bars --> must be set inside callback
     chart.attr("height", barHeight * data.length);
 
-    var bar = d3.selectAll("g")
-        .data(data)
-    .enter().append("g") // append <g>s (svg groups) using data join
-        .attr("transform", function(d,i) { return "translate(0, " + i * barHeight + ")"}); // translate <g> elem along y-axis, creating a local origin for positioning the bar and its label
+    var bar = chart.selectAll("g")
+            .data(data)
+        .enter().append("g") // append <g>s (svg groups) using data join
+            .attr("transform", function(d,i) { return "translate(0, " + i * barHeight + ")"}); // translate <g> elem along y-axis, creating a local origin for positioning the bar and its label
 
 /*
 Since there is exactly one <rect> and one <text> per <g>, we can append these elements directly to the <g>, without needing additional data joins. Data joins are only needed when creating a variable number of children based on data; here we are appending just one child per parent. The appended <rect>s and <text>s inherit data from their parent g element, and thus we can use data to compute the bar width and label position.
 */
 
     bar.append("rect") // append <rect> to each <g>
-        .attr("width", x)
-        .attr("height", barHeight - 1)
+        .attr("width", function(d) { return x(d.value); })
+        .attr("height", barHeight - 1);
 
     bar.append("text") // append <text> to each <g>
-        .attr("x", function(d) { return x(d) - 3; })
+        .attr("x", function(d) { return x(d.value) - 3; })
         .attr("y", barHeight / 2)
         .attr("dy", ".35em")
-        .text(function(d) { return d; });
+        .text(function(d) { return d.value; });
 });
 
+// specify a type function that is passed as 2nd argument to tsv() to convert between types
+// like strings and numbers
 function type(d) {
-    d.Value = +d.Value; // coerce to number
+    d.value = +d.value; // coerce to number
     return d;
 }
 
