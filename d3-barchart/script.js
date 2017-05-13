@@ -30,12 +30,20 @@ d3.tsv("data.tsv", function(error, data) {
 // 2. Code here runs second, while the file is downloading.
 */
 
-//*********** SVG BAR CHART *********
-var width = 420,
+// Specify a type function that is passed as 2nd argument to tsv()
+// to convert between types like strings and numbers.
+function type(d) {
+    d.value = +d.value; // coerce to number
+    return d;
+}
+
+//*********** SVG HORIZONTAL BAR CHART *********
+/*var width = 420,
     barHeight = 20;
 
 var x = d3.scale.linear() //.domain([0, d3.max[data]]) // data now pulled from tsv; undefined until pulled
-    .range([0, /*d3.max[data] * 10*/ width]);
+    //.range([0, d3.max[data] * 10]);
+    .range([0, width]);
 
 var chart = d3.select("svg.chart")
     .attr("width", width);
@@ -54,9 +62,10 @@ d3.tsv("data.tsv", type, function(error,data) {
         .enter().append("g") // append <g>s (svg groups) using data join
             .attr("transform", function(d,i) { return "translate(0, " + i * barHeight + ")"}); // translate <g> elem along y-axis, creating a local origin for positioning the bar and its label
 
-/*
-Since there is exactly one <rect> and one <text> per <g>, we can append these elements directly to the <g>, without needing additional data joins. Data joins are only needed when creating a variable number of children based on data; here we are appending just one child per parent. The appended <rect>s and <text>s inherit data from their parent g element, and thus we can use data to compute the bar width and label position.
-*/
+// Since there is exactly one <rect> and one <text> per <g>, we can append these elements directly to the <g>,
+// without needing additional data joins. Data joins are only needed when creating a variable number of children
+// based on data; here we are appending just one child per parent. The appended <rect>s and <text>s inherit data
+// from their parent g element, and thus we can use data to compute the bar width and label position.
 
     bar.append("rect") // append <rect> to each <g>
         .attr("width", function(d) { return x(d.value); })
@@ -67,12 +76,53 @@ Since there is exactly one <rect> and one <text> per <g>, we can append these el
         .attr("y", barHeight / 2)
         .attr("dy", ".35em")
         .text(function(d) { return d.value; });
+});*/
+
+//*********** SVG VERTICAL BAR CHART *********
+
+var width = 960,
+    height = 500;
+
+var y = d3.scale.linear()
+    .range([height, 0]); //range is changed from [0, width]; SVG origin = top left. Zero-value should be positioned at the bottom of the chart, not top.
+
+var chart = d3.select("svg.chart")
+    .attr("width", width)
+    .attr("height", height);
+
+d3.tsv("data.tsv", type, function(error, data) {
+    y.domain([0, d3.max(data, function(d) { return d.value; })]);
+
+    var barWidth = width / data.length;
+
+    var bar = chart.selectAll("g")
+            .data(data)
+        .enter().append("g")
+            .attr("transform", function(d,i) { return "translate(" + i * barWidth + ",0)" ;});
+
+    // ELEMS ARE POSITIONED FROM TOP DOWN! (THINK OF <rect> AS <div>)
+    // GIST IS TO PUSH THE <div>s DOWN ACCORDING TO d.value,
+    // THEN MAKE <div> HEIGHTS SO THAT THEY END AT THE SAME PLACE ON THE Y-AXIS.
+    // <svg> origin is top left --> "y" is essentially = "top". y(d.value) scales the "top" position of the <rect> elem.
+    // If d.value = max value in dataset --> <rect> height = chart (<svg>) height --> "top" position = 0.
+    // y(d.value) thus increases the "top" position of the <rect> elem according to d.value.
+    // <rect> elem height = chart (<svg>) height - <rect> "top" position, to make all the <rect> elems "end" at the same location
+
+    bar.append("rect")
+        .attr("y", function(d) { console.log(d.value, y(d.value)); return y(d.value); })
+        .attr("width", barWidth - 1)
+        .attr("height", function(d) { return height - y(d.value); });
+
+
+    bar.append("text")
+        .attr("x", barWidth / 2)
+        .attr("y", function(d) { return y(d.value) + 3; })
+        .attr("dy", ".75em")
+        .text(function(d) { return d.value; });
 });
 
-// specify a type function that is passed as 2nd argument to tsv() to convert between types
-// like strings and numbers
-function type(d) {
-    d.value = +d.value; // coerce to number
-    return d;
-}
+
+
+
+
 
