@@ -113,41 +113,66 @@ var x = d3.scale.ordinal()
 var y = d3.scale.linear()
     .range([height, 0]); //range is changed from [0, width]; SVG origin = top left. Zero-value should be positioned at the bottom of the chart, not top.
 
+var xAxis = d3.svg.axis() // create an xAxis obj that can be rendered anywhere using call()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
 var chart = d3.select("svg.chart")
         .attr("width", width + margin.left + margin.right) // set the width and height of the SVG element to the outer dimensions
         .attr("height", height + margin.top + margin.bottom)
     .append("g") // add a <g> to offset the origin of the chart area by the top-left margin. This <g> will contain the data <g>s.
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-
-
 d3.tsv("letter-frequency.tsv", type, function(error, data) {
     x.domain(data.map(function(d) { return d.name; })); // map d.name along the x-axis to space them evenly
     y.domain([0, d3.max(data, function(d) { return d.value; })]);
 
-    var barWidth = width / data.length;
+    chart.append("g") // append a <g> to contain the xAxis
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")") // axis elements are positioned relative to a local origin, so transform the containing <g> to translate along y-axis
+        .call(xAxis);
 
-    var bar = chart.selectAll("g")
-            .data(data)
-        .enter().append("g")
-            .attr("transform", function(d,i) { return "translate(" + x(d.name) + ",0)" ;});
+    chart.append("g")
+        .attr("class", "y axis")
+        .call(yAxis);
 
     // <svg> origin is top left --> "y" is essentially = "top". y(d.value) scales the "top" position of the <rect> elem.
     // If d.value = max value in dataset --> <rect> height = chart (<svg>) height --> "top" position = 0.
     // y(d.value) thus increases the "top" position of the <rect> elem according to d.value.
     // <rect> elem height = chart (<svg>) height - <rect> "top" position, to make all the <rect> elems "end" at the same location
 
-    bar.append("rect")
-        .attr("y", function(d) { return y(d.value); })
-        .attr("width", barWidth - 1)
-        .attr("height", function(d) { return height - y(d.value); });
+    chart.selectAll(".bar")
+            .data(data)
+        .enter().append("rect") // append <rect class="bar">s directly to parent <g>
+            .attr("class", "bar")
+            .attr("x", function(d) { return x(d.name); })
+            .attr("y", function(d) { return y(d.value); })
+            .attr("height", function(d) { return height - y(d.value); })
+            .attr("width", x.rangeBand());
 
-
-    bar.append("text")
-        .attr("x", barWidth / 2)
-        .attr("y", function(d) { return y(d.value) + 3; })
-        .attr("dy", ".75em")
-        .text(function(d) { return d.value; });
+// SINCE WE NOW HAVE AXES, NO LONGER NEED THE FOLLOWING:
+//    var barWidth = width / data.length;
+//
+//    var bar = chart.selectAll("g")
+//            .data(data)
+//        .enter().append("g")
+//            .attr("transform", function(d,i) { return "translate(" + x(d.name) + ",0)" ;});
+//
+//    bar.append("rect")
+//        .attr("y", function(d) { return y(d.value); })
+//        .attr("width", barWidth - 1)
+//        .attr("height", function(d) { return height - y(d.value); });
+//
+//
+//    bar.append("text")
+//        .attr("x", barWidth / 2)
+//        .attr("y", function(d) { return y(d.value) + 3; })
+//        .attr("dy", ".75em")
+//        .text(function(d) { return d.value; });
 });
 
 
