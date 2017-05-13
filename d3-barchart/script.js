@@ -83,6 +83,10 @@ d3.tsv("data.tsv", type, function(error,data) {
 var width = 960,
     height = 500;
 
+// ELEMS ARE POSITIONED FROM TOP DOWN! (THINK OF <rect> AS <div>)
+// GIST IS TO PUSH THE <div>s DOWN ACCORDING TO d.value,
+// THEN MAKE <div> HEIGHTS SO THAT THEY END AT THE SAME PLACE ON THE Y-AXIS.
+
 var y = d3.scale.linear()
     .range([height, 0]); //range is changed from [0, width]; SVG origin = top left. Zero-value should be positioned at the bottom of the chart, not top.
 
@@ -90,7 +94,7 @@ var chart = d3.select("svg.chart")
     .attr("width", width)
     .attr("height", height);
 
-d3.tsv("data.tsv", type, function(error, data) {
+d3.tsv("letter-frequency.tsv", type, function(error, data) {
     y.domain([0, d3.max(data, function(d) { return d.value; })]);
 
     var barWidth = width / data.length;
@@ -100,16 +104,13 @@ d3.tsv("data.tsv", type, function(error, data) {
         .enter().append("g")
             .attr("transform", function(d,i) { return "translate(" + i * barWidth + ",0)" ;});
 
-    // ELEMS ARE POSITIONED FROM TOP DOWN! (THINK OF <rect> AS <div>)
-    // GIST IS TO PUSH THE <div>s DOWN ACCORDING TO d.value,
-    // THEN MAKE <div> HEIGHTS SO THAT THEY END AT THE SAME PLACE ON THE Y-AXIS.
     // <svg> origin is top left --> "y" is essentially = "top". y(d.value) scales the "top" position of the <rect> elem.
     // If d.value = max value in dataset --> <rect> height = chart (<svg>) height --> "top" position = 0.
     // y(d.value) thus increases the "top" position of the <rect> elem according to d.value.
     // <rect> elem height = chart (<svg>) height - <rect> "top" position, to make all the <rect> elems "end" at the same location
 
     bar.append("rect")
-        .attr("y", function(d) { console.log(d.value, y(d.value)); return y(d.value); })
+        .attr("y", function(d) { return y(d.value); })
         .attr("width", barWidth - 1)
         .attr("height", function(d) { return height - y(d.value); });
 
