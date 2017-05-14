@@ -1,17 +1,21 @@
-var circle = d3.selectAll("circle");
+var svg = d3.select("svg");
 
-var getRandomInt = function() {
-    return Math.floor(Math.random() * 255);
-};
+var circle = svg.selectAll("circle")
+    .data([32, 57, 112, 293]);
 
-circle.style("fill", function() { return "rgb("+ getRandomInt() + "," + getRandomInt() + "," + getRandomInt() + ")"; })
-    .attr("r", 30)
-    .style("stroke", "black");
+circle.attr("r", function(d) { return Math.sqrt(d); })
+    .attr("cx", function(d, i) { return i * 100 + 30; })
+    .style("fill", "steelblue");
 
-var reposition = function() {
-    circle.attr("cx", function() { return Math.random() * 360; });
-};
+// ENTER
 
-var repeatReposition = setInterval(function() {
-    reposition();
-}, 1000);
+circle.enter().append("circle") // will append a 4th circle
+    .attr("cy", 60)
+    .attr("cx", function(d, i) { return i * 100 + 30; })
+    .attr("r", function(d) { return Math.sqrt(d); });
+
+// EXIT
+
+svg.selectAll("circle")
+    .data([32,57]) // only 2 items in dataset --> remove remaining <circle>s
+    .exit().remove();
