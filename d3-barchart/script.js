@@ -119,7 +119,8 @@ var xAxis = d3.svg.axis() // create an xAxis obj that can be rendered anywhere u
 
 var yAxis = d3.svg.axis()
     .scale(y)
-    .orient("left");
+    .orient("left")
+    .ticks(10, "%");
 
 var chart = d3.select("svg.chart")
         .attr("width", width + margin.left + margin.right) // set the width and height of the SVG element to the outer dimensions
@@ -129,7 +130,8 @@ var chart = d3.select("svg.chart")
 
 d3.tsv("letter-frequency.tsv", type, function(error, data) {
     x.domain(data.map(function(d) { return d.name; })); // map d.name along the x-axis to space them evenly
-    y.domain([0, d3.max(data, function(d) { return d.value; })]);
+//    y.domain([0, d3.max(data, function(d) { return d.value; })]);
+    y.domain([0, 1]); // change domain max val to 1 so that max val on y-axis = 100% (since frequencies are in decimals)
 
     chart.append("g") // append a <g> to contain the xAxis
         .attr("class", "x axis")
@@ -137,8 +139,15 @@ d3.tsv("letter-frequency.tsv", type, function(error, data) {
         .call(xAxis);
 
     chart.append("g")
-        .attr("class", "y axis")
-        .call(yAxis);
+            .attr("class", "y axis")
+            .call(yAxis)
+        .append("text") // append label to y-axis
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dx", function() { return height / -2; })
+            .attr("dy", "-3.95em")
+            .style("text-anchor", "end")
+            .text("Frequency");
 
     // <svg> origin is top left --> "y" is essentially = "top". y(d.value) scales the "top" position of the <rect> elem.
     // If d.value = max value in dataset --> <rect> height = chart (<svg>) height --> "top" position = 0.
