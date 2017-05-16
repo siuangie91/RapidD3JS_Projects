@@ -1,6 +1,12 @@
 # RapidD3JS_Projects
 
-Tutorials: https://github.com/d3/d3/wiki/Tutorials
+**D3 API:**
+
+https://github.com/d3/d3/blob/master/API.md
+
+**Tutorials:** 
+
+https://github.com/d3/d3/wiki/Tutorials
 
 ************************************************************
 
