@@ -27,3 +27,7 @@ https://bost.ocks.org/mike/selection/
 I: https://bl.ocks.org/mbostock/5348789
 
 II: https://bl.ocks.org/mbostock/6081914
+
+**HANDLING DYNAMIC JSON DATA**
+
+http://pothibo.com/2013/09/d3-js-how-to-handle-dynamic-json-data/
